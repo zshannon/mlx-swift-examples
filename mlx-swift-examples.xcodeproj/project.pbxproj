@@ -13,6 +13,10 @@
 		0AC74ED12D13622A003C90A7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC74ECC2D13622A003C90A7 /* ContentView.swift */; };
 		0AC74ED22D13622A003C90A7 /* VLMEvalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AC74ECD2D13622A003C90A7 /* VLMEvalApp.swift */; };
 		0AC74ED32D136265003C90A7 /* DeviceStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819BEFF62BAF8B4E0002CCEE /* DeviceStat.swift */; };
+		1120E3192D38D47300330EC5 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = 1120E3182D38D47300330EC5 /* ArgumentParser */; };
+		116F758D2D38D8E800DED5EB /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = 116F758C2D38D8E800DED5EB /* Transformers */; };
+		116F75932D38E38E00DED5EB /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 116F75922D38E38E00DED5EB /* MLX */; };
+		11F586C42D38EBCC005290C3 /* MLXSTT in Frameworks */ = {isa = PBXBuildFile; productRef = 11F586C32D38EBCC005290C3 /* MLXSTT */; };
 		12305EAF2B9D864400C92FEE /* PredictionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12305EAE2B9D864400C92FEE /* PredictionView.swift */; };
 		81695B412BA373D300F260D8 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 81695B402BA373D300F260D8 /* MarkdownUI */; };
 		819BEFF82BAF8B4E0002CCEE /* DeviceStat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819BEFF62BAF8B4E0002CCEE /* DeviceStat.swift */; };
@@ -30,7 +34,7 @@
 		C32A18012CFFD1810092A5B6 /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18002CFFD1810092A5B6 /* MLXMNIST */; };
 		C32A18032CFFD1920092A5B6 /* MLXMNIST in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18022CFFD1920092A5B6 /* MLXMNIST */; };
 		C32A18052CFFD19F0092A5B6 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18042CFFD19F0092A5B6 /* MLXLLM */; };
-		C32A18072CFFD1AA0092A5B6 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18062CFFD1AA0092A5B6 /* MLXLLM */; };
+		C32A18072CFFD1AA0092A5B6 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		C32A18092CFFD1B70092A5B6 /* StableDiffusion in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18082CFFD1B70092A5B6 /* StableDiffusion */; };
 		C32A18462D00E1490092A5B6 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18452D00E1490092A5B6 /* MLX */; };
 		C32A18482D00E1540092A5B6 /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = C32A18472D00E1540092A5B6 /* MLX */; };
@@ -63,6 +67,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		1120E30E2D38D3AE00330EC5 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		C3056BC12BCD984F00A31D04 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -188,6 +201,10 @@
 		0AC74ECD2D13622A003C90A7 /* VLMEvalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLMEvalApp.swift; sourceTree = "<group>"; };
 		0AC74ED42D13630D003C90A7 /* VLMEval.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = VLMEval.entitlements; sourceTree = "<group>"; };
 		0AC74F282D1376F1003C90A7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		1120E3102D38D3AE00330EC5 /* stt-tool */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "stt-tool"; sourceTree = BUILT_PRODUCTS_DIR; };
+		116F758F2D38D9FB00DED5EB /* jfk.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = jfk.wav; sourceTree = "<group>"; };
+		116F75942D38E60E00DED5EB /* mlx-swift-examples */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "mlx-swift-examples"; path = "/Users/zcs/Code/zshannon/mlx-swift-examples"; sourceTree = "<absolute>"; };
+		11C6C97A2D38D6C600DAA7E3 /* swift-transformers */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "swift-transformers"; path = "/Users/zcs/Library/Developer/Xcode/DerivedData/mlx-swift-examples-chxjeeawzzvrfofhjiqzhcmtvfxi/SourcePackages/checkouts/swift-transformers"; sourceTree = "<absolute>"; };
 		12305EAE2B9D864400C92FEE /* PredictionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PredictionView.swift; sourceTree = "<group>"; };
 		819BEFF62BAF8B4E0002CCEE /* DeviceStat.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceStat.swift; sourceTree = "<group>"; };
 		C3056BA12BCD973400A31D04 /* test.jsonl */ = {isa = PBXFileReference; lastKnownFileType = text; path = test.jsonl; sourceTree = "<group>"; };
@@ -245,6 +262,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1120E3112D38D3AE00330EC5 /* stt-tool */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "stt-tool"; sourceTree = "<group>"; };
 		C397D92E2CD440EF00B87EE2 /* Libraries */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Libraries; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -257,11 +275,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1120E30D2D38D3AE00330EC5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				116F75932D38E38E00DED5EB /* MLX in Frameworks */,
+				116F758D2D38D8E800DED5EB /* Transformers in Frameworks */,
+				11F586C42D38EBCC005290C3 /* MLXSTT in Frameworks */,
+				1120E3192D38D47300330EC5 /* ArgumentParser in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C3056BA82BCD97B700A31D04 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C32A18072CFFD1AA0092A5B6 /* MLXLLM in Frameworks */,
+				C32A18072CFFD1AA0092A5B6 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,6 +391,14 @@
 			path = VLMEval;
 			sourceTree = "<group>";
 		};
+		116F758E2D38D99600DED5EB /* whisper */ = {
+			isa = PBXGroup;
+			children = (
+				116F758F2D38D9FB00DED5EB /* jfk.wav */,
+			);
+			path = whisper;
+			sourceTree = "<group>";
+		};
 		819BEFF72BAF8B4E0002CCEE /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
@@ -384,6 +421,7 @@
 		C3056BA62BCD973400A31D04 /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				116F758E2D38D99600DED5EB /* whisper */,
 				C3056BA52BCD973400A31D04 /* lora */,
 			);
 			path = Data;
@@ -497,6 +535,7 @@
 				C36BEFE02BC32988002D4AFE /* image-tool */,
 				C36BF0012BC5CE55002D4AFE /* StableDiffusionExample.app */,
 				0AC74EBB2D136221003C90A7 /* VLMEval.app */,
+				1120E3102D38D3AE00330EC5 /* stt-tool */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -512,6 +551,8 @@
 		C392737E2B606A2C00368D5D /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				11C6C97A2D38D6C600DAA7E3 /* swift-transformers */,
+				116F75942D38E60E00DED5EB /* mlx-swift-examples */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -524,6 +565,7 @@
 				C34E49222B6A026F00FCB841 /* mnist-tool */,
 				C34E48F32B696F0B00FCB841 /* llm-tool */,
 				C39273762B606A0A00368D5D /* Tutorial */,
+				1120E3112D38D3AE00330EC5 /* stt-tool */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -616,6 +658,32 @@
 			productReference = 0AC74EBB2D136221003C90A7 /* VLMEval.app */;
 			productType = "com.apple.product-type.application";
 		};
+		1120E30F2D38D3AE00330EC5 /* stt-tool */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1120E3142D38D3AE00330EC5 /* Build configuration list for PBXNativeTarget "stt-tool" */;
+			buildPhases = (
+				1120E30C2D38D3AE00330EC5 /* Sources */,
+				1120E30D2D38D3AE00330EC5 /* Frameworks */,
+				1120E30E2D38D3AE00330EC5 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1120E3112D38D3AE00330EC5 /* stt-tool */,
+			);
+			name = "stt-tool";
+			packageProductDependencies = (
+				1120E3182D38D47300330EC5 /* ArgumentParser */,
+				116F758C2D38D8E800DED5EB /* Transformers */,
+				116F75922D38E38E00DED5EB /* MLX */,
+				11F586C32D38EBCC005290C3 /* MLXSTT */,
+			);
+			productName = "stt-tool";
+			productReference = 1120E3102D38D3AE00330EC5 /* stt-tool */;
+			productType = "com.apple.product-type.tool";
+		};
 		C3056BAA2BCD97B700A31D04 /* LoRATrainingExample */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C3056BB72BCD97B800A31D04 /* Build configuration list for PBXNativeTarget "LoRATrainingExample" */;
@@ -631,7 +699,6 @@
 			);
 			name = LoRATrainingExample;
 			packageProductDependencies = (
-				C32A18062CFFD1AA0092A5B6 /* MLXLLM */,
 			);
 			productName = LoRATrainingExample;
 			productReference = C3056BAB2BCD97B700A31D04 /* LoRATrainingExample.app */;
@@ -816,9 +883,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1530;
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					1120E30F2D38D3AE00330EC5 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 					C3056BAA2BCD97B700A31D04 = {
 						CreatedOnToolsVersion = 15.3;
 					};
@@ -864,6 +934,7 @@
 				C36BEFF02BC32A8C002D4AFE /* XCRemoteSwiftPackageReference "Progress" */,
 				C397D8F22CD2F60B00B87EE2 /* XCLocalSwiftPackageReference "Source/.." */,
 				C32A18442D00E13E0092A5B6 /* XCRemoteSwiftPackageReference "mlx-swift" */,
+				11A243B12D38D78A00EDC78B /* XCRemoteSwiftPackageReference "swift-transformers" */,
 			);
 			productRefGroup = C39273752B606A0A00368D5D /* Products */;
 			projectDirPath = "";
@@ -879,6 +950,7 @@
 				C36BEFDF2BC32988002D4AFE /* image-tool */,
 				C36BF0002BC5CE55002D4AFE /* StableDiffusionExample */,
 				0AC74EBA2D136221003C90A7 /* VLMEval */,
+				1120E30F2D38D3AE00330EC5 /* stt-tool */,
 			);
 		};
 /* End PBXProject section */
@@ -942,6 +1014,13 @@
 				0AC74ED12D13622A003C90A7 /* ContentView.swift in Sources */,
 				0AC74ED32D136265003C90A7 /* DeviceStat.swift in Sources */,
 				0AC74ED22D13622A003C90A7 /* VLMEvalApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1120E30C2D38D3AE00330EC5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1153,6 +1232,86 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		1120E3152D38D3AE00330EC5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1120E3162D38D3AE00330EC5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -2449,7 +2608,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_ASSET_PATHS = "\"Applications/LLMEval/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4Y5KT38CM6;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -2542,7 +2701,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_ASSET_PATHS = "\"Applications/LLMEval/Preview Content\"";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4Y5KT38CM6;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2594,6 +2753,15 @@
 			buildConfigurations = (
 				0AC74EC72D136223003C90A7 /* Debug */,
 				0AC74EC82D136223003C90A7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1120E3142D38D3AE00330EC5 /* Build configuration list for PBXNativeTarget "stt-tool" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1120E3152D38D3AE00330EC5 /* Debug */,
+				1120E3162D38D3AE00330EC5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -2698,6 +2866,14 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		11A243B12D38D78A00EDC78B /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-transformers";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.14;
+			};
+		};
 		81695B3F2BA373D300F260D8 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
@@ -2746,6 +2922,25 @@
 			package = C397D8F22CD2F60B00B87EE2 /* XCLocalSwiftPackageReference "Source/.." */;
 			productName = MLXVLM;
 		};
+		1120E3182D38D47300330EC5 /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C392736E2B60699100368D5D /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+		116F758C2D38D8E800DED5EB /* Transformers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 11A243B12D38D78A00EDC78B /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Transformers;
+		};
+		116F75922D38E38E00DED5EB /* MLX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C32A18442D00E13E0092A5B6 /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLX;
+		};
+		11F586C32D38EBCC005290C3 /* MLXSTT */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MLXSTT;
+		};
 		81695B402BA373D300F260D8 /* MarkdownUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 81695B3F2BA373D300F260D8 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
@@ -2777,11 +2972,6 @@
 			productName = MLXMNIST;
 		};
 		C32A18042CFFD19F0092A5B6 /* MLXLLM */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C397D8F22CD2F60B00B87EE2 /* XCLocalSwiftPackageReference "Source/.." */;
-			productName = MLXLLM;
-		};
-		C32A18062CFFD1AA0092A5B6 /* MLXLLM */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C397D8F22CD2F60B00B87EE2 /* XCLocalSwiftPackageReference "Source/.." */;
 			productName = MLXLLM;

@@ -20,6 +20,9 @@ let package = Package(
             name: "MLXMNIST",
             targets: ["MLXMNIST"]),
         .library(
+            name: "MLXSTT",
+            targets: ["MLXSTT"]),
+        .library(
             name: "MLXEmbedders",
             targets: ["MLXEmbedders"]),
         .library(
@@ -81,6 +84,25 @@ let package = Package(
                 .product(name: "Transformers", package: "swift-transformers"),
             ],
             path: "Libraries/MLXLMCommon",
+            exclude: [
+                "README.md"
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
+        .target(
+            name: "MLXSTT",
+            dependencies: [
+                "MLXLMCommon",
+                .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXFast", package: "mlx-swift"),
+                .product(name: "MLXNN", package: "mlx-swift"),
+                .product(name: "MLXOptimizers", package: "mlx-swift"),
+                .product(name: "MLXRandom", package: "mlx-swift"),
+                .product(name: "Transformers", package: "swift-transformers"),
+            ],
+            path: "Libraries/MLXSTT",
             exclude: [
                 "README.md"
             ],
