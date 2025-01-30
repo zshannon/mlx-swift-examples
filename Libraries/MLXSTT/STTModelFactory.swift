@@ -3,16 +3,16 @@
 import Foundation
 import Hub
 import MLX
-import MLXLMCommon
 import Tokenizers
 
 /// Creates a function that loads a configuration file and instantiates a model with the proper configuration
 private func create<C: Codable, M>(
-    _ configurationType: C.Type, _ modelInit: @escaping (C) -> M
+    _: C.Type, _ modelInit: @escaping (C) -> M
 ) -> (URL) throws -> M {
     { url in
         let configuration = try JSONDecoder().decode(
-            C.self, from: Data(contentsOf: url))
+            C.self, from: Data(contentsOf: url)
+        )
         return modelInit(configuration)
     }
 }
@@ -21,27 +21,26 @@ private func create<C: Codable, M>(
 ///
 /// Typically called via ``STTModelFactory/load(hub:configuration:progressHandler:)``.
 public class ModelTypeRegistry: @unchecked Sendable {
-
     // Note: using NSLock as we have very small (just dictionary get/set)
     // critical sections and expect no contention.  this allows the methods
     // to remain synchronous.
     private let lock = NSLock()
 
-    private var creators: [String: @Sendable (URL) throws -> any LanguageModel] = [
+    private var creators: [String: @Sendable (URL) throws -> any SpeechToTextModel] = [
         "whisper": create(WhisperConfiguration.self, WhisperModel.init),
     ]
 
     /// Add a new model to the type registry.
     public func registerModelType(
-        _ type: String, creator: @Sendable @escaping (URL) throws -> any LanguageModel
+        _ type: String, creator: @Sendable @escaping (URL) throws -> any SpeechToTextModel
     ) {
         lock.withLock {
             creators[type] = creator
         }
     }
 
-    /// Given a `modelType` and configuration file instantiate a new `LanguageModel`.
-    public func createModel(configuration: URL, modelType: String) throws -> LanguageModel {
+    /// Given a `modelType` and configuration file instantiate a new `SpeechToTextModel`.
+    public func createModel(configuration: URL, modelType: String) throws -> SpeechToTextModel {
         let creator = lock.withLock {
             creators[modelType]
         }
@@ -50,7 +49,6 @@ public class ModelTypeRegistry: @unchecked Sendable {
         }
         return try creator(configuration)
     }
-
 }
 
 /// Registry of models and any overrides that go with them, e.g. prompt augmentation.
@@ -60,12 +58,12 @@ public class ModelTypeRegistry: @unchecked Sendable {
 /// swift-tokenizers code handles a good chunk of that and this is a place to augment that
 /// implementation, if needed.
 public class ModelRegistry: @unchecked Sendable {
-
     private let lock = NSLock()
     private var registry = Dictionary(uniqueKeysWithValues: all().map { ($0.name, $0) })
 
-    static public let whisperTiny = ModelConfiguration(
-        id: "mlx-community/whisper-tiny"
+    public static let whisperTiny = ModelConfiguration(
+        id: "mlx-community/whisper-tiny",
+        tokenizerId: "openai/whisper-tiny"
     )
 
     private static func all() -> [ModelConfiguration] {
@@ -94,30 +92,19 @@ public class ModelRegistry: @unchecked Sendable {
 }
 
 private struct STTUserInputProcessor: UserInputProcessor {
-
     let tokenizer: Tokenizer
     let configuration: ModelConfiguration
 
-    internal init(tokenizer: any Tokenizer, configuration: ModelConfiguration) {
+    init(tokenizer: any Tokenizer, configuration: ModelConfiguration) {
         self.tokenizer = tokenizer
         self.configuration = configuration
     }
 
-    func prepare(input: UserInput) throws -> LMInput {
-        do {
-            let messages = input.prompt.asMessages()
-            let promptTokens = try tokenizer.applyChatTemplate(messages: messages)
-            return LMInput(tokens: MLXArray(promptTokens))
-        } catch {
-            // #150 -- it might be a TokenizerError.chatTemplate("No chat template was specified")
-            // but that is not public so just fall back to text
-            let prompt = input.prompt
-                .asMessages()
-                .compactMap { $0["content"] }
-                .joined(separator: ". ")
-            let promptTokens = tokenizer.encode(text: prompt)
-            return LMInput(tokens: MLXArray(promptTokens))
-        }
+    func prepare(input: UserInput) throws -> STTMInput {
+        let messages = input.audioURLs
+//            let promptTokens = try tokenizer.applyChatTemplate(messages: messages)
+        fatalError("TODO: parse audio files")
+        return STTMInput()
     }
 }
 
@@ -131,7 +118,6 @@ private struct STTUserInputProcessor: UserInputProcessor {
 ///     configuration: ModelRegistry.whisperTiny)
 /// ```
 public class STTModelFactory: ModelFactory {
-
     public static let shared = STTModelFactory()
 
     /// registry of model type, e.g. configuration value `llama` -> configuration and init methods
@@ -150,25 +136,29 @@ public class STTModelFactory: ModelFactory {
     ) async throws -> ModelContext {
         // download weights and config
         let modelDirectory = try await downloadModel(
-            hub: hub, configuration: configuration, progressHandler: progressHandler)
+            hub: hub, configuration: configuration, progressHandler: progressHandler
+        )
 
         // load the generic config to unerstand which model and how to load the weights
         let configurationURL = modelDirectory.appending(component: "config.json")
         let baseConfig = try JSONDecoder().decode(
-            BaseConfiguration.self, from: Data(contentsOf: configurationURL))
+            BaseConfiguration.self, from: Data(contentsOf: configurationURL)
+        )
         let model = try typeRegistry.createModel(
-            configuration: configurationURL, modelType: baseConfig.modelType)
+            configuration: configurationURL, modelType: baseConfig.modelType
+        )
 
         // apply the weights to the bare model
         try loadWeights(
-            modelDirectory: modelDirectory, model: model, quantization: baseConfig.quantization)
-
+            modelDirectory: modelDirectory, model: model, quantization: baseConfig.quantization
+        )
+        
         let tokenizer = try await loadTokenizer(configuration: configuration, hub: hub)
 
         return .init(
             configuration: configuration, model: model,
             processor: STTUserInputProcessor(tokenizer: tokenizer, configuration: configuration),
-            tokenizer: tokenizer)
+            tokenizer: tokenizer
+        )
     }
-
 }
