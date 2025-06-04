@@ -16,10 +16,14 @@ public actor WhisperModelContainer {
     }
 
     public func transcribe(file path: String) throws -> String {
-        let mel = logMelSpectrogram(try loadAudio(path))
+        let audio = try loadAudio(path)
+        print("[DEBUG] Audio array shape: \(audio.shape)")
+        let mel = logMelSpectrogram(audio)
+        print("[DEBUG] Mel spectrogram shape: \(mel.shape)")
 
         // Encode audio once
         let audioFeatures = model.embedAudio(mel[.newAxis, 0...])
+        print("[DEBUG] Audio features shape: \(audioFeatures.shape)")
 
         // Use the WhisperTokenizer special tokens
         let specialTokens = tokenizer.specialTokens
@@ -30,9 +34,10 @@ public actor WhisperModelContainer {
         var resultTokens: [Int] = []
 
         // Generate tokens autoregressively
-        for _ in 0 ..< 100 {
+        for step in 0 ..< 100 {
             let logits = model.logits(tokens: tokens[.newAxis, 0...], audioFeatures: audioFeatures)
             let next = argMax(logits[0..., -1], axis: -1).item(Int.self)
+            print("[DEBUG] Step \(step) predicted token: \(next)")
 
             // Stop on end of text
             if next == specialTokens.endToken {
@@ -55,6 +60,7 @@ public actor WhisperModelContainer {
 
         // Decode all result tokens at once
         let result = tokenizer.decode(tokens: resultTokens)
+        print("[DEBUG] Final tokens: \(resultTokens)")
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
