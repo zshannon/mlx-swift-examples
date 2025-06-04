@@ -179,6 +179,7 @@ let package = Package(
                 .product(name: "MLXFFT", package: "mlx-swift"),
                 .product(name: "MLXNN", package: "mlx-swift"),
                 .product(name: "Transformers", package: "swift-transformers"),
+                .product(name: "Tiktoken", package: "Tiktoken"),
                 "MLXLMCommon",
             ],
             path: "Libraries/MLXWhisper",

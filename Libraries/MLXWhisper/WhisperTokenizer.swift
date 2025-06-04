@@ -151,10 +151,12 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
         let data = try! Data(contentsOf: fileURL)
         let ranks = FileDecoder().decode(data)
         let regex = try! NSRegularExpression(
-            pattern: "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+",
+            pattern:
+                "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+",
             options: []
         )
-        self.encoding = Encoding(name: "whisper-multilingual", regex: regex, mergeableRanks: ranks, specialTokens: [:])
+        self.encoding = Encoding(
+            name: "whisper-multilingual", regex: regex, mergeableRanks: ranks, specialTokens: [:])
     }
 
     public func encode(text: String) -> [Int] {
@@ -187,9 +189,15 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
             }
         }
         if !regular.isEmpty {
-            result += encoding.decode(value: regular)
+            let decodedRegular = encoding.decode(value: regular)
+            result += decodedRegular
+            
+            // Debug specific problematic tokens
+            if regular.contains(0) {
+                print("[DEBUG] Token 0 decoded to: '\(encoding.decode(value: [0]))'")
+            }
         }
-        print("[DEBUG] Decoding tokens \(tokens) -> \(result)")
+        print("[DEBUG] Decoding tokens \(tokens) -> '\(result)'")
         return result
     }
 
@@ -241,4 +249,273 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
 
         return tokens
     }
+}
+
+struct FileDecoder {
+    func decode(_ data: Data) -> [[UInt8]: Int] {
+        guard let decoded = String(data: data, encoding: .utf8) else { return [:] }
+        var result: [[UInt8]: Int] = .init()
+        decoded.split(separator: "\n").forEach({
+            let lineSplit = $0.split(separator: " ")
+            guard let first = lineSplit.first,
+                let key = String(first).base64Decoded(),
+                let value = lineSplit.last
+            else {
+                return
+            }
+            result[key.uInt8] = Int(value)
+        })
+        return result
+    }
+}
+
+public class Encoding {
+
+    //mergeable_ranks: dict[bytes, int],
+    //special_tokens: dict[str, int],
+    //explicit_n_vocab: Optional[int] = None,
+
+    //    let name: String
+    //    let explicitNVocab: Int?
+    //    let pattern: String
+    //    let mergeableRanks: [[UInt8]: Int]
+    //    let specialTokens: [String: Int] // TODO: Map to [UInt8]
+
+    private let name: String
+    private let regex: NSRegularExpression  // Regex
+    let mergeableRanks: [[UInt8]: Int]
+    let specialTokens: [String: Int]
+    private let maxValueToken: Int
+
+    private let coreBpe: CoreBPE
+
+    init(
+        name: String, regex: NSRegularExpression, mergeableRanks: [[UInt8]: Int],
+        specialTokens: [String: Int], explicitNVocab: Int? = nil
+    ) {
+        self.name = name
+        self.regex = regex
+        self.mergeableRanks = mergeableRanks
+        self.specialTokens = specialTokens
+        self.maxValueToken = max(mergeableRanks.values.max() ?? 0, specialTokens.values.max() ?? 0)
+
+        // Assert validation
+
+        //        if explicit_n_vocab:
+        //            assert len(mergeable_ranks) + len(special_tokens) == explicit_n_vocab
+        //            assert self.max_token_value == explicit_n_vocab - 1
+
+        let decoder = mergeableRanks.inverted
+        self.coreBpe = .init(encoder: mergeableRanks, decoder: decoder, regexTls: [regex])
+    }
+
+    public func encode(value: String) -> [Int] {
+        coreBpe.encodeOrdinaryNative(text: value)
+    }
+
+    public func decode(value: [Int]) -> String {
+        coreBpe.decodeNative(tokens: value)
+    }
+}
+
+class CoreBPE {
+    private let encoder: [[UInt8]: Int]
+    private let specialTokensEncoder: [String: Int]
+    private let decoder: [Int: [UInt8]]
+    private let specialTokensDecoder: [Int: Data]
+    private let regexTls: [NSRegularExpression]
+    private let specialRegexTls: [NSRegularExpression]
+    private let sortedTokenBytes: [Data]
+
+    init(
+        encoder: [[UInt8]: Int] = .init(),
+        specialTokensEncoder: [String: Int] = .init(),
+        decoder: [Int: [UInt8]] = .init(),
+        specialTokensDecoder: [Int: Data] = .init(),
+        regexTls: [NSRegularExpression] = .init(),
+        specialRegexTls: [NSRegularExpression] = .init(),
+        sortedTokenBytes: [Data] = .init()
+    ) {
+        self.encoder = encoder
+        self.specialTokensEncoder = specialTokensEncoder
+        self.decoder = decoder
+        self.specialTokensDecoder = specialTokensDecoder
+        self.regexTls = regexTls
+        self.specialRegexTls = specialRegexTls
+        self.sortedTokenBytes = sortedTokenBytes
+    }
+
+    func encodeOrdinaryNative(text: String) -> [Int] {
+        let regex = regexTls.first!
+        var ret = [Int]()
+        for mat in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+            if let range = Range(mat.range, in: text) {
+                let piece = Array(text[range].utf8)
+                if let token = encoder[piece] {
+                    ret.append(token)
+                    continue
+                }
+                let encoded = bytePairEncode([UInt8](piece), encoder)
+                ret.append(contentsOf: encoded)
+            }
+        }
+        return ret
+    }
+
+    func decodeNative(tokens: [Int]) -> String {
+        let data = tokens.reduce(
+            into: Data(),
+            {
+                if let tokenBytes = decoder[$1] {
+                    $0.append(contentsOf: tokenBytes)
+                }
+            })
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+}
+
+extension CoreBPE {
+    fileprivate func increaseLastPieceTokenLen(tokens: [Int], lastPieceTokenLen: Int) -> (
+        [Int], Int
+    ) {
+        func tokenIsAllSpace(_ token: Int) -> Bool {
+            guard let tokenBytes = decoder[token] else { return false }
+            return tokenBytes.reversed().allSatisfy { [32, 10, 9].contains($0) }  // WARNING: .all(|&b| [b' ', b'\n', b'\t'].contains(&b))
+        }
+
+        var lastPieceTokenLen = lastPieceTokenLen
+        if lastPieceTokenLen > 0 && tokenIsAllSpace(tokens[tokens.count - lastPieceTokenLen]) {
+            while lastPieceTokenLen < tokens.count
+                && tokenIsAllSpace(tokens[tokens.count - lastPieceTokenLen - 1])
+            {
+                lastPieceTokenLen += 1
+            }
+        }
+
+        assert(lastPieceTokenLen <= tokens.count)
+        return (tokens, lastPieceTokenLen)
+    }
+}
+
+// MARK: - Merges
+
+extension CoreBPE {
+    fileprivate func bytePairMerge<T>(
+        _ piece: [UInt8], _ ranks: [[UInt8]: Int], completion: (Range<Int>) -> T
+    ) -> [T] {
+        // This is a vector of (start, rank).
+        // The rank is of the byte pair starting at position start.
+        // The rank of the last item in the vector is not a valid value.
+        var parts = (0 ..< piece.count + 1).map { ($0, Int.max) }
+
+        let getRank: ([(Int, Int)], Int, Int) -> Int? = { parts, startIdx, skip in
+            let calculatedIndex = startIdx + skip + 2
+            if calculatedIndex < parts.count {
+                let range = parts[startIdx].0 ..< parts[calculatedIndex].0
+                let subPiece = Array(piece[range])
+                return ranks[subPiece]
+            } else {
+                return nil
+            }
+        }
+
+        // We look up the ranks once in the beginning and iteratively update
+        // them during each merge, which reduces the number of rank lookups.
+        for i in 0 ..< (parts.count - 2) {
+            if let rank = getRank(parts, i, 0) {
+                assert(rank != Int.max)
+                parts[i].1 = rank
+            }
+        }
+
+        // If you have n parts and m merges, this does O(mn) work.
+        // We could do something with a heap and do O(m log n) work.
+        // It is important to consider that n is often small (<100), and as such
+        // the cache-locality benefits outweigh the algorithmic complexity downsides
+        // of the `parts` vector data structure above.
+
+        // Note that we hash bytes, not token pairs. As long as we train BPE the way we
+        // currently do, this is equivalent. An easy way to break this would be to decouple
+        // merge priority from token index or to prevent specific token merges.
+        while parts.count > 1 {
+            // usize::MAX is a sentinel rank value allowing us to
+            // take the min more quickly
+            var minRank = (Int.max, 0)
+            for (i, (_, rank)) in parts.enumerated() {
+                if rank < minRank.0 {
+                    minRank = (rank, i)
+                }
+            }
+
+            if minRank.0 != Int.max {
+                let i = minRank.1
+
+                // NOTE: We are about to remove parts[i + 1]. We do not do it
+                // yet because there are cache-locality benefits to updating
+                // parts[i] and parts[i-1] before removing, which could thrash
+                // the cache. Thus, we update the rank calculation by skipping over
+                // parts[i + 1], by invoking `get_rank!` with `skip = 1`.
+                parts[i].1 = getRank(parts, i, 1) ?? Int.max
+                if i > 0 {
+                    parts[i - 1].1 = getRank(parts, i - 1, 1) ?? Int.max
+                }
+                parts.remove(at: i + 1)
+            } else {
+                break
+            }
+        }
+
+        // TODO: Use ranks
+        return parts.prevCurrent({ completion($0.0 ..< $1.0) })
+    }
+
+    fileprivate func bytePairEncode(_ piece: [UInt8], _ ranks: [[UInt8]: Int]) -> [Int] {
+        if piece.count == 1 {
+            return [ranks[piece]!]
+        }
+        return bytePairMerge(
+            piece, ranks,
+            completion: { p in
+                let chunk = Array(piece[p])
+                return ranks[chunk] ?? 0
+            })
+    }
+
+    //    func bytePairSplit(_ piece: [UInt8], _ ranks: [[UInt8]: Int]) -> [[UInt8]] {
+    //        if piece.count == 1 {
+    //            return [piece]
+    //        }
+    //        return bytePairMerge(piece, ranks, completion: { Array(piece[$0]) })
+    //    }
+}
+
+extension Array {
+    func prevCurrent<T>(_ body: (Element, Element) throws -> T) rethrows -> [T] {
+        enumerated().compactMap({ index, element in
+            guard index > 0 else { return nil }
+            let prev = self[index - 1]
+            return try? body(prev, element)
+        })
+    }
+}
+
+typealias Ranks = [[UInt8]: Int]
+extension Ranks {
+    var inverted: [Int: [UInt8]] {
+        reduce(into: [:], { $0[$1.value] = $1.key })
+    }
+}
+
+extension String {
+    func base64Encoded() -> String? {
+        data(using: .utf8)?.base64EncodedString()
+    }
+
+    func base64Decoded() -> String? {
+        guard let data = Data(base64Encoded: self) else { return nil }
+        return String(data: data, encoding: .ascii)
+    }
+}
+extension String {
+    var uInt8: [UInt8] { utf16.map({ UInt8($0) }) }
 }
