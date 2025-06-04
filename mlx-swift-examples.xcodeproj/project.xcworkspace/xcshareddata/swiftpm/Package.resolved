@@ -1,5 +1,5 @@
 {
-  "originHash" : "5b8f479687d916677158d7747e9b766ff83f08092c1595079ff9b70c909c6250",
+  "originHash" : "774bc6f1b8c8e68628a398def8de1285249a5dbbff66e819ed27c65a6bb3da2d",
   "pins" : [
     {
       "identity" : "gzipswift",
@@ -107,6 +107,15 @@
       "state" : {
         "revision" : "c2f302a74cca59cbde683b1425ab43c05685515a",
         "version" : "0.1.21"
+      }
+    },
+    {
+      "identity" : "tiktoken",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aespinilla/Tiktoken",
+      "state" : {
+        "branch" : "main",
+        "revision" : "4ad6460448278f7a28f1e4ee2723500369f20acb"
       }
     }
   ],
