@@ -18,11 +18,11 @@ public func transcribe(
     var tokens = MLXArray([tokenizer.bosTokenId ?? 0])
     var result = ""
     for _ in 0 ..< 448 {
-        let logits = model(mel: mel[.newAxis, ...], tokens: tokens[.newAxis, ...])
-        let next = Int(argmax(logits[0, -1]))
+        let logits = model(mel: mel[.newAxis, 0...], tokens: tokens[.newAxis, 0...])
+        let next = argMax(logits[0..., -1], axis: -1).item(Int.self)
         if next == tokenizer.eosTokenId { break }
         tokens = concatenated([tokens, MLXArray([next])], axis: 0)
-        result += tokenizer.decode([next])
+        result += tokenizer.decode(tokens: [next])
     }
     return result
 }

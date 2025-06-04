@@ -17,10 +17,10 @@ public struct ModelDimensions: Sendable {
 
 func sinusoids(length: Int, channels: Int, maxTimescale: Float = 10000) -> MLXArray {
     precondition(channels % 2 == 0)
-    let logTimescaleIncrement = log(maxTimescale) / Float(channels / 2 - 1)
-    let invTimescales = exp(-logTimescaleIncrement * MLXArray(arange: channels/2))
-    let scaledTime = MLXArray(arange: length)[..., .newAxis] * invTimescales[.newAxis, ...]
-    return concatenated([sin(scaledTime), cos(scaledTime)], axis: 1)[0]
+    let logTimescaleIncrement = MLX.log(MLXArray(maxTimescale)) / Float(channels / 2 - 1)
+    let invTimescales = MLX.exp(-logTimescaleIncrement * MLXArray(stride(from: 0, to: channels/2, by: 1)))
+    let scaledTime = MLXArray(stride(from: 0, to: length, by: 1))[0..., .newAxis] * invTimescales[.newAxis, 0...]
+    return concatenated([MLX.sin(scaledTime), MLX.cos(scaledTime)], axis: 1)
 }
 
 class MultiHeadAttention: Module {
@@ -34,22 +34,29 @@ class MultiHeadAttention: Module {
     init(nState: Int, nHead: Int) {
         self.nState = nState
         self.nHead = nHead
-        self._query = Linear(nState, nState)
-        self._key = Linear(nState, nState, bias: false)
-        self._value = Linear(nState, nState)
-        self._out = Linear(nState, nState)
+        
+        super.init()
+        
+        self._query.wrappedValue = Linear(nState, nState)
+        self._key.wrappedValue = Linear(nState, nState, bias: false)
+        self._value.wrappedValue = Linear(nState, nState)
+        self._out.wrappedValue = Linear(nState, nState)
     }
 
     func callAsFunction(_ x: MLXArray, xa: MLXArray? = nil, mask: MLXArray? = nil, kvCache: (MLXArray, MLXArray)? = nil) -> (MLXArray, (MLXArray, MLXArray), MLXArray) {
-        var q = query(x)
+        let q = query(x)
         var k: MLXArray
         var v: MLXArray
         if xa == nil {
             k = key(x)
             v = value(x)
             if let cache = kvCache {
-                k = concatenated([cache.0, k], axis: 1)
-                v = concatenated([cache.1, v], axis: 1)
+                if cache.0.size > 0 {
+                    k = concatenated([cache.0, k], axis: 1)
+                }
+                if cache.1.size > 0 {
+                    v = concatenated([cache.1, v], axis: 1)
+                }
             }
         } else if kvCache == nil {
             k = key(xa!)
@@ -65,15 +72,14 @@ class MultiHeadAttention: Module {
     func qkvAttention(q: MLXArray, k: MLXArray, v: MLXArray, mask: MLXArray? = nil) -> (MLXArray, MLXArray) {
         let nBatch = q.shape[0]
         let nCtx = q.shape[1]
-        let scale = pow(Float(nState / nHead), -0.25)
-        var q = q.reshaped([nBatch, nCtx, nHead, -1]).transposed(0,2,1,3) * scale
-        var k = k.reshaped([nBatch, -1, nHead, -1]).transposed(0,2,3,1) * scale
-        var v = v.reshaped([nBatch, -1, nHead, -1]).transposed(0,2,1,3)
-        var qk = q @ k
+        let scale = MLX.pow(MLXArray(Float(nState / nHead)), MLXArray(-0.25))
+        let q = q.reshaped([nBatch, nCtx, nHead, nState / nHead]).transposed(0,2,1,3) * scale
+        let k = k.reshaped([nBatch, k.shape[1], nHead, nState / nHead]).transposed(0,2,3,1) * scale
+        let v = v.reshaped([nBatch, v.shape[1], nHead, nState / nHead]).transposed(0,2,1,3)
+        let qk = matmul(q, k)
         if let m = mask { qk += m[0..<nCtx, 0..<nCtx] }
         let w = softmax(qk, axis: -1)
-        var out = (w @ v).transposed(0,2,1,3)
-        out = out.reshaped([nBatch, nCtx, nState])
+        let out = matmul(w, v).transposed(0,2,1,3).reshaped([nBatch, nCtx, nState])
         return (out, qk)
     }
 }
@@ -88,16 +94,21 @@ class ResidualAttentionBlock: Module {
     @ModuleInfo var mlpLn: LayerNorm
 
     init(nState: Int, nHead: Int, crossAttention: Bool = false) {
-        self._attn = MultiHeadAttention(nState: nState, nHead: nHead)
-        self._attnLn = LayerNorm(nState)
-        if crossAttention {
-            self._crossAttn = MultiHeadAttention(nState: nState, nHead: nHead)
-            self._crossAttnLn = LayerNorm(nState)
-        }
         let nMlp = nState * 4
-        self._mlp1 = Linear(nState, nMlp)
-        self._mlp2 = Linear(nMlp, nState)
-        self._mlpLn = LayerNorm(nState)
+        
+        super.init()
+        
+        self._attn.wrappedValue = MultiHeadAttention(nState: nState, nHead: nHead)
+        self._attnLn.wrappedValue = LayerNorm(dimensions: nState)
+        
+        if crossAttention {
+            self._crossAttn.wrappedValue = MultiHeadAttention(nState: nState, nHead: nHead)
+            self._crossAttnLn.wrappedValue = LayerNorm(dimensions: nState)
+        }
+        
+        self._mlp1.wrappedValue = Linear(nState, nMlp)
+        self._mlp2.wrappedValue = Linear(nMlp, nState)
+        self._mlpLn.wrappedValue = LayerNorm(dimensions: nState)
     }
 
     func callAsFunction(_ x: MLXArray, xa: MLXArray? = nil, mask: MLXArray? = nil, kvCache: (MLXArray, MLXArray)? = nil) -> (MLXArray, (MLXArray, MLXArray)?, MLXArray?) {
@@ -120,23 +131,56 @@ class ResidualAttentionBlock: Module {
 class AudioEncoder: Module {
     @ModuleInfo var conv1: Conv1d
     @ModuleInfo var conv2: Conv1d
-    var positionalEmbedding: MLXArray
+    private let nCtx: Int
+    private let nState: Int
+    private let dtype: DType
+    private var _positionalEmbedding: MLXArray?
     var blocks: [ResidualAttentionBlock]
     @ModuleInfo var lnPost: LayerNorm
+    
+    var positionalEmbedding: MLXArray {
+        if let cached = _positionalEmbedding {
+            return cached
+        }
+        let embedding = sinusoids(length: nCtx, channels: nState, maxTimescale: 10000).asType(dtype)
+        _positionalEmbedding = embedding
+        return embedding
+    }
 
     init(nMels: Int, nCtx: Int, nState: Int, nHead: Int, nLayer: Int, dtype: DType = .float16) {
-        self._conv1 = Conv1d(inChannels: nMels, outChannels: nState, kernelSize: 3, padding: 1)
-        self._conv2 = Conv1d(inChannels: nState, outChannels: nState, kernelSize: 3, stride: 2, padding: 1)
-        positionalEmbedding = sinusoids(length: nCtx, channels: nState, maxTimescale: 10000).asType(dtype)
-        blocks = (0..<nLayer).map { _ in ResidualAttentionBlock(nState: nState, nHead: nHead) }
-        self._lnPost = LayerNorm(nState)
+        self.nCtx = nCtx
+        self.nState = nState
+        self.dtype = dtype
+        self.blocks = (0..<nLayer).map { _ in ResidualAttentionBlock(nState: nState, nHead: nHead) }
+        
+        super.init()
+        
+        self._conv1.wrappedValue = Conv1d(inputChannels: nMels, outputChannels: nState, kernelSize: 3, padding: 1)
+        self._conv2.wrappedValue = Conv1d(inputChannels: nState, outputChannels: nState, kernelSize: 3, stride: 2, padding: 1)
+        self._lnPost.wrappedValue = LayerNorm(dimensions: nState)
     }
 
     func callAsFunction(_ x: MLXArray) -> MLXArray {
-        var x = gelu(conv1(x))
+        // MLX Conv1d expects input in NLC format: [batch, length, channels]
+        var x = x
+        
+        // Convert mel spectrogram to proper format for MLX Conv1d
+        if x.shape.count == 2 && x.shape[0] == 80 {
+            // x is [nMels, nFrames], transpose to [nFrames, nMels], then add batch
+            x = x.T  // [3000, 80]
+            x = expandedDimensions(x, axis: 0)  // [1, 3000, 80]
+        } else if x.shape.count == 2 {
+            // Generic 2D case: add batch dimension
+            x = expandedDimensions(x, axis: 0)
+        }
+        
+        x = gelu(conv1(x))
         x = gelu(conv2(x))
+        
+        // x is now [batch, seq_len, nState] which is correct for transformer blocks
         assert(x.shape[1] == positionalEmbedding.shape[0])
         x += positionalEmbedding
+        
         for block in blocks {
             (x, _, _) = block(x)
         }
@@ -146,17 +190,44 @@ class AudioEncoder: Module {
 
 class TextDecoder: Module {
     @ModuleInfo var tokenEmbedding: Embedding
-    var positionalEmbedding: MLXArray
+    private let nCtx: Int
+    private let nState: Int
+    private let dtype: DType
+    private var _positionalEmbedding: MLXArray?
+    private var _mask: MLXArray?
     var blocks: [ResidualAttentionBlock]
     @ModuleInfo var ln: LayerNorm
-    var mask: MLXArray
+    
+    var positionalEmbedding: MLXArray {
+        if let cached = _positionalEmbedding {
+            return cached
+        }
+        let embedding = MLXArray.zeros([nCtx, nState])
+        _positionalEmbedding = embedding
+        return embedding
+    }
+    
+    var mask: MLXArray {
+        if let cached = _mask {
+            return cached
+        }
+        let indices = MLXArray(0 ..< nCtx)
+        var mask = expandedDimensions(indices, axis: 1) .< expandedDimensions(indices, axis: 0)
+        mask = mask.asType(dtype) * -1e9
+        _mask = mask
+        return mask
+    }
 
     init(nVocab: Int, nCtx: Int, nState: Int, nHead: Int, nLayer: Int, dtype: DType = .float16) {
-        self._tokenEmbedding = Embedding(nVocab, nState)
-        self.positionalEmbedding = MLXArray(zeros: [nCtx, nState])
-        blocks = (0..<nLayer).map { _ in ResidualAttentionBlock(nState: nState, nHead: nHead, crossAttention: true) }
-        self._ln = LayerNorm(nState)
-        self.mask = MultiHeadAttention.createAdditiveCausalMask(length: nCtx).asType(dtype)
+        self.nCtx = nCtx
+        self.nState = nState
+        self.dtype = dtype
+        self.blocks = (0..<nLayer).map { _ in ResidualAttentionBlock(nState: nState, nHead: nHead, crossAttention: true) }
+        
+        super.init()
+        
+        self._tokenEmbedding.wrappedValue = Embedding(embeddingCount: nVocab, dimensions: nState)
+        self._ln.wrappedValue = LayerNorm(dimensions: nState)
     }
 
     func callAsFunction(_ x: MLXArray, xa: MLXArray, kvCache: [(MLXArray, MLXArray)]? = nil) -> (MLXArray, [(MLXArray, MLXArray)], [MLXArray]) {
@@ -180,19 +251,33 @@ public class Whisper: Module {
     public let dims: ModelDimensions
     @ModuleInfo var encoder: AudioEncoder
     @ModuleInfo var decoder: TextDecoder
-    public var alignmentHeads: MLXArray
+    private var _alignmentHeads: MLXArray?
+    
+    public var alignmentHeads: MLXArray {
+        if let cached = _alignmentHeads {
+            return cached
+        }
+        let allHeads = MLXArray.zeros([dims.nTextLayer, dims.nTextHead])
+        let start = dims.nTextLayer / 2
+        let heads: MLXArray
+        if start < dims.nTextLayer {
+            let onesSection = MLXArray.ones([dims.nTextLayer - start, dims.nTextHead])
+            let topSection = allHeads[..<start, 0...]
+            heads = concatenated([topSection, onesSection], axis: 0).asType(.bool)
+        } else {
+            heads = allHeads.asType(.bool)
+        }
+        _alignmentHeads = heads
+        return heads
+    }
 
     public init(dims: ModelDimensions, dtype: DType = .float16) {
         self.dims = dims
-        self._encoder = AudioEncoder(nMels: dims.nMels, nCtx: dims.nAudioCtx, nState: dims.nAudioState, nHead: dims.nAudioHead, nLayer: dims.nAudioLayer, dtype: dtype)
-        self._decoder = TextDecoder(nVocab: dims.nVocab, nCtx: dims.nTextCtx, nState: dims.nTextState, nHead: dims.nTextHead, nLayer: dims.nTextLayer, dtype: dtype)
-        let allHeads = MLXArray(zeros: [dims.nTextLayer, dims.nTextHead], type: .bool)
-        var arr = allHeads
-        let start = dims.nTextLayer / 2
-        if start < dims.nTextLayer {
-            arr[start..., ...] = MLXArray(repeating: 1, shape: [dims.nTextLayer - start, dims.nTextHead], type: .bool)
-        }
-        self.alignmentHeads = MLXArray(nonZeroIndices: arr)
+        
+        super.init()
+        
+        self._encoder.wrappedValue = AudioEncoder(nMels: dims.nMels, nCtx: dims.nAudioCtx, nState: dims.nAudioState, nHead: dims.nAudioHead, nLayer: dims.nAudioLayer, dtype: dtype)
+        self._decoder.wrappedValue = TextDecoder(nVocab: dims.nVocab, nCtx: dims.nTextCtx, nState: dims.nTextState, nHead: dims.nTextHead, nLayer: dims.nTextLayer, dtype: dtype)
     }
 
     public var isMultilingual: Bool { dims.nVocab >= 51865 }

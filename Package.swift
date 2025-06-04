@@ -28,6 +28,9 @@ let package = Package(
         .library(
             name: "MLXWhisper",
             targets: ["MLXWhisper"]),
+        .executable(
+            name: "whisper-tool",
+            targets: ["WhisperTool"]),
     ],
     dependencies: [
         .package(url: "https://github.com/ml-explore/mlx-swift", .upToNextMinor(from: "0.21.2")),
@@ -35,6 +38,7 @@ let package = Package(
             url: "https://github.com/huggingface/swift-transformers", .upToNextMinor(from: "0.1.21")
         ),
         .package(url: "https://github.com/1024jp/GzipSwift", "6.0.1" ... "6.0.1"),  // Only needed by MLXMNIST
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
     ],
     targets: [
         .target(
@@ -165,6 +169,8 @@ let package = Package(
             name: "MLXWhisper",
             dependencies: [
                 .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXFast", package: "mlx-swift"),
+                .product(name: "MLXFFT", package: "mlx-swift"),
                 .product(name: "MLXNN", package: "mlx-swift"),
                 .product(name: "Transformers", package: "swift-transformers"),
                 "MLXLMCommon",
@@ -184,12 +190,29 @@ let package = Package(
             name: "MLXWhisperTests",
             dependencies: [
                 .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXFast", package: "mlx-swift"),
                 .product(name: "MLXNN", package: "mlx-swift"),
                 "MLXWhisper",
             ],
             path: "Tests/MLXWhisperTests",
             resources: [
                 .process("Resources")
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
+        .executableTarget(
+            name: "WhisperTool",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXNN", package: "mlx-swift"),
+                "MLXWhisper",
+            ],
+            path: "Applications/WhisperTool",
+            exclude: [
+                "README.md"
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
