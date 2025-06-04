@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import Tiktoken
+import Tokenizers
 
 public struct WhisperSpecialTokens {
     public let endToken: Int = 50257
@@ -25,9 +25,9 @@ public protocol WhisperTokenizerProtocol {
 }
 
 public class WhisperTokenizer: WhisperTokenizerProtocol {
-    private var encoding: Encoding?
+    private var tokenizer: PreTrainedTokenizer?
     public let specialTokens = WhisperSpecialTokens()
-    private let encodingQueue = DispatchQueue(label: "whisper.tokenizer.encoding")
+    private let tokenizerQueue = DispatchQueue(label: "whisper.tokenizer.encoding")
 
     // Hardcoded special token mappings following WhisperKit approach
     private let specialTokenMap: [String: Int] = [
@@ -149,38 +149,38 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
     public init() {
         // Initialize with a basic encoding - we'll use GPT-2 as the base
         // since Whisper uses a similar tokenization approach
-        self.initializeEncoding()
+        self.initializeTokenizer()
     }
-    
-    private func initializeEncoding() {
-        encodingQueue.async {
+
+    private func initializeTokenizer() {
+        tokenizerQueue.async {
             Task {
                 do {
-                    let encoding = try await Tiktoken.shared.getEncoding("gpt2")
-                    DispatchQueue.main.async {
-                        self.encoding = encoding
+                    if let tok = try await AutoTokenizer.from(pretrained: "gpt2") as? PreTrainedTokenizer {
+                        self.tokenizer = tok
                     }
                 } catch {
                     print("Failed to load encoding: \(error)")
-                    // Fallback to a basic implementation if needed
                 }
             }
         }
     }
-    
-    private func waitForEncoding() -> Encoding? {
+
+    private func waitForTokenizer() -> PreTrainedTokenizer? {
         // Simple synchronous wait for encoding to be available
         let semaphore = DispatchSemaphore(value: 0)
-        var result: Encoding?
-        
-        if encoding != nil {
-            return encoding
+        var result: PreTrainedTokenizer?
+
+        if tokenizer != nil {
+            return tokenizer
         }
-        
-        encodingQueue.async {
+
+        tokenizerQueue.async {
             Task {
                 do {
-                    result = try await Tiktoken.shared.getEncoding("gpt2")
+                    if let tok = try await AutoTokenizer.from(pretrained: "gpt2") as? PreTrainedTokenizer {
+                        result = tok
+                    }
                     semaphore.signal()
                 } catch {
                     print("Failed to load encoding: \(error)")
@@ -188,9 +188,9 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
                 }
             }
         }
-        
+
         semaphore.wait()
-        encoding = result
+        tokenizer = result
         return result
     }
 
@@ -198,18 +198,20 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
         if let specialId = specialTokenMap[text] {
             return [specialId]
         }
-        let encoder = encoding ?? waitForEncoding()
-        return encoder?.encode(value: text) ?? []
+        let tok = tokenizer ?? waitForTokenizer()
+        let ids = tok?.encode(text: text) ?? []
+        print("[DEBUG] Encoding '\(text)' -> \(ids)")
+        return ids
     }
 
     public func decode(tokens: [Int]) -> String {
-        let encoder = encoding ?? waitForEncoding()
+        let tok = tokenizer ?? waitForTokenizer()
         var result = ""
         var regular: [Int] = []
         for token in tokens {
             if let special = idToTokenMap[token] {
                 if !regular.isEmpty {
-                    result += encoder?.decode(value: regular) ?? ""
+                    result += tok?.decode(tokens: regular) ?? ""
                     regular.removeAll()
                 }
                 if special == "<|startoftranscript|>" || special == "<|endoftext|>" {
@@ -224,22 +226,27 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
             }
         }
         if !regular.isEmpty {
-            result += encoder?.decode(value: regular) ?? ""
+            result += tok?.decode(tokens: regular) ?? ""
         }
+        print("[DEBUG] Decoding tokens \(tokens) -> \(result)")
         return result
     }
 
     public func convertTokenToId(_ token: String) -> Int? {
-        let encoder = encoding ?? waitForEncoding()
-        return specialTokenMap[token] ?? encoder?.encode(value: token).first
+        let tok = tokenizer ?? waitForTokenizer()
+        let id = specialTokenMap[token] ?? tok?.convertTokenToId(token)
+        print("[DEBUG] convertTokenToId '\(token)' -> \(String(describing: id))")
+        return id
     }
 
     public func convertIdToToken(_ id: Int) -> String? {
         if let special = idToTokenMap[id] {
             return special
         }
-        let encoder = encoding ?? waitForEncoding()
-        return encoder?.decode(value: [id])
+        let tok = tokenizer ?? waitForTokenizer()
+        let token = tok?.convertIdToToken(id)
+        print("[DEBUG] convertIdToToken \(id) -> \(String(describing: token))")
+        return token
     }
 
     // Helper method to create prompt tokens for Whisper
