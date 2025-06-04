@@ -25,6 +25,9 @@ let package = Package(
         .library(
             name: "StableDiffusion",
             targets: ["StableDiffusion"]),
+        .library(
+            name: "MLXWhisper",
+            targets: ["MLXWhisper"]),
     ],
     dependencies: [
         .package(url: "https://github.com/ml-explore/mlx-swift", .upToNextMinor(from: "0.21.2")),
@@ -154,6 +157,36 @@ let package = Package(
             exclude: [
                 "README.md"
             ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
+        .target(
+            name: "MLXWhisper",
+            dependencies: [
+                .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXNN", package: "mlx-swift"),
+                .product(name: "Transformers", package: "swift-transformers"),
+                "MLXLMCommon",
+            ],
+            path: "Libraries/MLXWhisper",
+            exclude: [
+                "README.md"
+            ],
+            resources: [],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+        ),
+        .testTarget(
+            name: "MLXWhisperTests",
+            dependencies: [
+                .product(name: "MLX", package: "mlx-swift"),
+                .product(name: "MLXNN", package: "mlx-swift"),
+                "MLXWhisper",
+            ],
+            path: "Tests/MLXWhisperTests",
+            resources: [],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
