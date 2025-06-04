@@ -39,6 +39,7 @@ let package = Package(
         ),
         .package(url: "https://github.com/1024jp/GzipSwift", "6.0.1" ... "6.0.1"),  // Only needed by MLXMNIST
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
+        .package(url: "https://github.com/aespinilla/Tiktoken", branch: "main"),
     ],
     targets: [
         .target(
@@ -173,6 +174,7 @@ let package = Package(
                 .product(name: "MLXFFT", package: "mlx-swift"),
                 .product(name: "MLXNN", package: "mlx-swift"),
                 .product(name: "Transformers", package: "swift-transformers"),
+                .product(name: "Tiktoken", package: "Tiktoken"),
                 "MLXLMCommon",
             ],
             path: "Libraries/MLXWhisper",

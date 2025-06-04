@@ -1,16 +1,16 @@
 import Foundation
-import Tokenizers
+import Tiktoken
 
 public struct WhisperSpecialTokens {
-    public let endToken: Int = 50256
-    public let startOfTranscriptToken: Int = 50257
-    public let englishToken: Int = 50258
-    public let transcribeToken: Int = 50359
-    public let translateToken: Int = 50358
-    public let noSpeechToken: Int = 50362
-    public let noTimestampsToken: Int = 50363
-    public let timeTokenBegin: Int = 50364
-    public let specialTokenBegin: Int = 50257
+    public let endToken: Int = 50257
+    public let startOfTranscriptToken: Int = 50258
+    public let englishToken: Int = 50259
+    public let transcribeToken: Int = 50360
+    public let translateToken: Int = 50359
+    public let noSpeechToken: Int = 50363
+    public let noTimestampsToken: Int = 50364
+    public let timeTokenBegin: Int = 50365
+    public let specialTokenBegin: Int = 50258
     public let whitespaceToken: Int = 220
 
     public init() {}
@@ -25,119 +25,119 @@ public protocol WhisperTokenizerProtocol {
 }
 
 public class WhisperTokenizer: WhisperTokenizerProtocol {
-    private let baseTokenizer: (any Tokenizer)?
+    private let encoding: Encoding
     public let specialTokens = WhisperSpecialTokens()
 
     // Hardcoded special token mappings following WhisperKit approach
     private let specialTokenMap: [String: Int] = [
-        "<|endoftext|>": 50256,
-        "<|startoftranscript|>": 50257,
-        "<|en|>": 50258,
-        "<|zh|>": 50259,
-        "<|de|>": 50260,
-        "<|es|>": 50261,
-        "<|ru|>": 50262,
-        "<|ko|>": 50263,
-        "<|fr|>": 50264,
-        "<|ja|>": 50265,
-        "<|pt|>": 50266,
-        "<|tr|>": 50267,
-        "<|pl|>": 50268,
-        "<|ca|>": 50269,
-        "<|nl|>": 50270,
-        "<|ar|>": 50271,
-        "<|sv|>": 50272,
-        "<|it|>": 50273,
-        "<|id|>": 50274,
-        "<|hi|>": 50275,
-        "<|fi|>": 50276,
-        "<|vi|>": 50277,
-        "<|he|>": 50278,
-        "<|uk|>": 50279,
-        "<|el|>": 50280,
-        "<|ms|>": 50281,
-        "<|cs|>": 50282,
-        "<|ro|>": 50283,
-        "<|da|>": 50284,
-        "<|hu|>": 50285,
-        "<|ta|>": 50286,
-        "<|no|>": 50287,
-        "<|th|>": 50288,
-        "<|ur|>": 50289,
-        "<|hr|>": 50290,
-        "<|bg|>": 50291,
-        "<|lt|>": 50292,
-        "<|la|>": 50293,
-        "<|mi|>": 50294,
-        "<|ml|>": 50295,
-        "<|cy|>": 50296,
-        "<|sk|>": 50297,
-        "<|te|>": 50298,
-        "<|fa|>": 50299,
-        "<|lv|>": 50300,
-        "<|bn|>": 50301,
-        "<|sr|>": 50302,
-        "<|az|>": 50303,
-        "<|sl|>": 50304,
-        "<|kn|>": 50305,
-        "<|et|>": 50306,
-        "<|mk|>": 50307,
-        "<|br|>": 50308,
-        "<|eu|>": 50309,
-        "<|is|>": 50310,
-        "<|hy|>": 50311,
-        "<|ne|>": 50312,
-        "<|mn|>": 50313,
-        "<|bs|>": 50314,
-        "<|kk|>": 50315,
-        "<|sq|>": 50316,
-        "<|sw|>": 50317,
-        "<|gl|>": 50318,
-        "<|mr|>": 50319,
-        "<|pa|>": 50320,
-        "<|si|>": 50321,
-        "<|km|>": 50322,
-        "<|sn|>": 50323,
-        "<|yo|>": 50324,
-        "<|so|>": 50325,
-        "<|af|>": 50326,
-        "<|oc|>": 50327,
-        "<|ka|>": 50328,
-        "<|be|>": 50329,
-        "<|tg|>": 50330,
-        "<|sd|>": 50331,
-        "<|gu|>": 50332,
-        "<|am|>": 50333,
-        "<|yi|>": 50334,
-        "<|lo|>": 50335,
-        "<|uz|>": 50336,
-        "<|fo|>": 50337,
-        "<|ht|>": 50338,
-        "<|ps|>": 50339,
-        "<|tk|>": 50340,
-        "<|nn|>": 50341,
-        "<|mt|>": 50342,
-        "<|sa|>": 50343,
-        "<|lb|>": 50344,
-        "<|my|>": 50345,
-        "<|bo|>": 50346,
-        "<|tl|>": 50347,
-        "<|mg|>": 50348,
-        "<|as|>": 50349,
-        "<|tt|>": 50350,
-        "<|haw|>": 50351,
-        "<|ln|>": 50352,
-        "<|ha|>": 50353,
-        "<|ba|>": 50354,
-        "<|jw|>": 50355,
-        "<|su|>": 50356,
-        "<|yue|>": 50357,
-        "<|translate|>": 50358,
-        "<|transcribe|>": 50359,
-        "<|startoflm|>": 50360,
-        "<|startofprev|>": 50361,
-        "<|nospeech|>": 50362,
-        "<|notimestamps|>": 50363,
+        "<|endoftext|>": 50257,
+        "<|startoftranscript|>": 50258,
+        "<|en|>": 50259,
+        "<|zh|>": 50260,
+        "<|de|>": 50261,
+        "<|es|>": 50262,
+        "<|ru|>": 50263,
+        "<|ko|>": 50264,
+        "<|fr|>": 50265,
+        "<|ja|>": 50266,
+        "<|pt|>": 50267,
+        "<|tr|>": 50268,
+        "<|pl|>": 50269,
+        "<|ca|>": 50270,
+        "<|nl|>": 50271,
+        "<|ar|>": 50272,
+        "<|sv|>": 50273,
+        "<|it|>": 50274,
+        "<|id|>": 50275,
+        "<|hi|>": 50276,
+        "<|fi|>": 50277,
+        "<|vi|>": 50278,
+        "<|he|>": 50279,
+        "<|uk|>": 50280,
+        "<|el|>": 50281,
+        "<|ms|>": 50282,
+        "<|cs|>": 50283,
+        "<|ro|>": 50284,
+        "<|da|>": 50285,
+        "<|hu|>": 50286,
+        "<|ta|>": 50287,
+        "<|no|>": 50288,
+        "<|th|>": 50289,
+        "<|ur|>": 50290,
+        "<|hr|>": 50291,
+        "<|bg|>": 50292,
+        "<|lt|>": 50293,
+        "<|la|>": 50294,
+        "<|mi|>": 50295,
+        "<|ml|>": 50296,
+        "<|cy|>": 50297,
+        "<|sk|>": 50298,
+        "<|te|>": 50299,
+        "<|fa|>": 50300,
+        "<|lv|>": 50301,
+        "<|bn|>": 50302,
+        "<|sr|>": 50303,
+        "<|az|>": 50304,
+        "<|sl|>": 50305,
+        "<|kn|>": 50306,
+        "<|et|>": 50307,
+        "<|mk|>": 50308,
+        "<|br|>": 50309,
+        "<|eu|>": 50310,
+        "<|is|>": 50311,
+        "<|hy|>": 50312,
+        "<|ne|>": 50313,
+        "<|mn|>": 50314,
+        "<|bs|>": 50315,
+        "<|kk|>": 50316,
+        "<|sq|>": 50317,
+        "<|sw|>": 50318,
+        "<|gl|>": 50319,
+        "<|mr|>": 50320,
+        "<|pa|>": 50321,
+        "<|si|>": 50322,
+        "<|km|>": 50323,
+        "<|sn|>": 50324,
+        "<|yo|>": 50325,
+        "<|so|>": 50326,
+        "<|af|>": 50327,
+        "<|oc|>": 50328,
+        "<|ka|>": 50329,
+        "<|be|>": 50330,
+        "<|tg|>": 50331,
+        "<|sd|>": 50332,
+        "<|gu|>": 50333,
+        "<|am|>": 50334,
+        "<|yi|>": 50335,
+        "<|lo|>": 50336,
+        "<|uz|>": 50337,
+        "<|fo|>": 50338,
+        "<|ht|>": 50339,
+        "<|ps|>": 50340,
+        "<|tk|>": 50341,
+        "<|nn|>": 50342,
+        "<|mt|>": 50343,
+        "<|sa|>": 50344,
+        "<|lb|>": 50345,
+        "<|my|>": 50346,
+        "<|bo|>": 50347,
+        "<|tl|>": 50348,
+        "<|mg|>": 50349,
+        "<|as|>": 50350,
+        "<|tt|>": 50351,
+        "<|haw|>": 50352,
+        "<|ln|>": 50353,
+        "<|ha|>": 50354,
+        "<|ba|>": 50355,
+        "<|jw|>": 50356,
+        "<|su|>": 50357,
+        "<|yue|>": 50358,
+        "<|translate|>": 50359,
+        "<|transcribe|>": 50360,
+        "<|startoflm|>": 50361,
+        "<|startofprev|>": 50362,
+        "<|nospeech|>": 50363,
+        "<|notimestamps|>": 50364,
     ]
 
     // Reverse map for decoding
@@ -145,81 +145,60 @@ public class WhisperTokenizer: WhisperTokenizerProtocol {
         return Dictionary(uniqueKeysWithValues: specialTokenMap.map { ($1, $0) })
     }()
 
-    public init(baseTokenizer: (any Tokenizer)? = nil) {
-        self.baseTokenizer = baseTokenizer
+    public init() {
+        let bundle = Bundle.module
+        let fileURL = bundle.url(forResource: "multilingual", withExtension: "tiktoken")!
+        let data = try! Data(contentsOf: fileURL)
+        let ranks = FileDecoder().decode(data)
+        let regex = try! NSRegularExpression(
+            pattern: "'s|'t|'re|'ve|'m|'ll|'d| ?\\p{L}+| ?\\p{N}+| ?[^\\s\\p{L}\\p{N}]+|\\s+(?!\\S)|\\s+",
+            options: []
+        )
+        self.encoding = Encoding(name: "whisper-multilingual", regex: regex, mergeableRanks: ranks, specialTokens: [:])
     }
 
     public func encode(text: String) -> [Int] {
-        // For special tokens, return the hardcoded mapping
         if let specialId = specialTokenMap[text] {
             return [specialId]
         }
-
-        // For regular text, use the base tokenizer if available
-        if let tokenizer = baseTokenizer {
-            return tokenizer.encode(text: text)
-        }
-
-        // Fallback: simple character-based encoding (this is a very basic fallback)
-        return text.utf8.map { Int($0) }
+        return encoding.encode(value: text)
     }
 
     public func decode(tokens: [Int]) -> String {
         var result = ""
-        var regularTokens: [Int] = []
-
+        var regular: [Int] = []
         for token in tokens {
-            if let specialToken = idToTokenMap[token] {
-                // Decode any accumulated regular tokens first
-                if !regularTokens.isEmpty {
-                    if let tokenizer = baseTokenizer {
-                        result += tokenizer.decode(tokens: regularTokens)
-                    } else {
-                        // Fallback decoding
-                        result +=
-                            String(
-                                bytes: regularTokens.compactMap { UInt8(exactly: $0) },
-                                encoding: .utf8) ?? ""
-                    }
-                    regularTokens.removeAll()
+            if let special = idToTokenMap[token] {
+                if !regular.isEmpty {
+                    result += encoding.decode(value: regular)
+                    regular.removeAll()
                 }
-
-                // Add special token (without the angle brackets for most tokens)
-                if specialToken == "<|startoftranscript|>" || specialToken == "<|endoftext|>" {
-                    // These tokens are typically not included in the final output
+                if special == "<|startoftranscript|>" || special == "<|endoftext|>" {
                     continue
-                } else if specialToken.hasPrefix("<|") && specialToken.hasSuffix("|>") {
-                    // Language tokens and other special tokens
+                } else if special.hasPrefix("<|") && special.hasSuffix("|>") {
                     continue
                 } else {
-                    result += specialToken
+                    result += special
                 }
             } else {
-                regularTokens.append(token)
+                regular.append(token)
             }
         }
-
-        // Decode any remaining regular tokens
-        if !regularTokens.isEmpty {
-            if let tokenizer = baseTokenizer {
-                result += tokenizer.decode(tokens: regularTokens)
-            } else {
-                // Fallback decoding
-                result +=
-                    String(bytes: regularTokens.compactMap { UInt8(exactly: $0) }, encoding: .utf8)
-                    ?? ""
-            }
+        if !regular.isEmpty {
+            result += encoding.decode(value: regular)
         }
-
         return result
     }
 
     public func convertTokenToId(_ token: String) -> Int? {
-        return specialTokenMap[token] ?? baseTokenizer?.convertTokenToId(token)
+        return specialTokenMap[token] ?? encoding.encode(value: token).first
     }
 
     public func convertIdToToken(_ id: Int) -> String? {
-        return idToTokenMap[id] ?? baseTokenizer?.convertIdToToken(id)
+        if let special = idToTokenMap[id] {
+            return special
+        }
+        return encoding.decode(value: [id])
     }
 
     // Helper method to create prompt tokens for Whisper

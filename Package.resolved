@@ -62,6 +62,15 @@
         "revision" : "c2f302a74cca59cbde683b1425ab43c05685515a",
         "version" : "0.1.21"
       }
+    },
+    {
+      "identity" : "tiktoken",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/aespinilla/Tiktoken",
+      "state" : {
+        "branch" : "main",
+        "revision" : "4ad6460448278f7a28f1e4ee2723500369f20acb"
+      }
     }
   ],
   "version" : 2
