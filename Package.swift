@@ -40,6 +40,7 @@ let package = Package(
         .package(
             url: "https://github.com/huggingface/swift-transformers", .upToNextMinor(from: "0.1.21")
         ),
+        .package(url: "https://github.com/aespinilla/Tiktoken", branch: "main"),
         .package(url: "https://github.com/1024jp/GzipSwift", "6.0.1" ... "6.0.1"),  // Only needed by MLXMNIST
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-crypto", from: "3.12.0"),
@@ -108,6 +109,7 @@ let package = Package(
                 .product(name: "MLXOptimizers", package: "mlx-swift"),
                 .product(name: "MLXRandom", package: "mlx-swift"),
                 .product(name: "Transformers", package: "swift-transformers"),
+                .product(name: "Tiktoken", package: "Tiktoken"),
                 "MLXLMCommon",
                 "MLXLLM",
                 "MLXVLM",
