@@ -21,3 +21,14 @@ let container = try await WhisperModelFactory.shared.loadContainer(
     configuration: WhisperRegistry.base)
 let text = try await container.transcribe(file: "speech.flac")
 ```
+
+## Running Tests
+
+To run the MLXWhisper tests specifically:
+
+```bash
+# From the project root directory
+swift test --filter MLXWhisperTests
+```
+
+The tests include transcription validation using a sample JFK audio file that will be automatically downloaded if not present locally.
