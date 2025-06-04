@@ -16,15 +16,15 @@ public actor WhisperModelContainer {
     }
 
     public func transcribe(file path: String) throws -> String {
-        let mel = try logMelSpectrogram(try loadAudio(path))
+        let mel = logMelSpectrogram(try loadAudio(path))
         var tokens = MLXArray([tokenizer.bosTokenId ?? 0])
         var result = ""
-        for _ in 0 ..< 448 {
-            // let logits = model(mel: mel[.newAxis, ...], tokens: tokens[.newAxis, ...])
-            // let next = Int(argmax(logits[0, -1]))
-            // if next == tokenizer.eosTokenId { break }
-            // tokens = concatenated([tokens, MLXArray([next])], axis: 0)
-            // result += tokenizer.decode([next])
+        for _ in 0..<448 {
+            let logits = model(mel: mel[.newAxis, ...], tokens: tokens[.newAxis, ...])
+            let next = Int(argmax(logits[0, -1]))
+            if next == tokenizer.eosTokenId { break }
+            tokens = concatenated([tokens, MLXArray([next])], axis: 0)
+            result += tokenizer.decode([next])
         }
         return result
     }
@@ -48,7 +48,6 @@ public class WhisperModelFactory: Sendable {
             hub: hub, configuration: configuration, dtype: dtype,
             progressHandler: progressHandler)
         let tokenizer = try await loadTokenizer(configuration: configuration, hub: hub)
-        return WhisperModelContainer(
-            model: model, tokenizer: tokenizer, configuration: configuration)
+        return WhisperModelContainer(model: model, tokenizer: tokenizer, configuration: configuration)
     }
 }
