@@ -1,7 +1,6 @@
 import Foundation
 @preconcurrency import Hub
 import MLX
-import MLXLMCommon
 import MLXNN
 
 public func loadModel(path: URL, dtype: DType = .float16) throws -> Whisper {
@@ -29,11 +28,11 @@ public func loadModel(path: URL, dtype: DType = .float16) throws -> Whisper {
     if !FileManager.default.fileExists(atPath: weightsURL.path) {
         weightsURL = url.appending(component: "weights.npz")
     }
-    // let weights = try MLXArray.load(contentsOf: weightsURL)
-    // try model.update(
-    // parameters: ModuleParameters.unflattened(weights.mapValues { $0.asType(dtype) }),
-    // verify: .none)
-    // mx.eval(model.parameters())
+    let weights = try MLXArray.load(contentsOf: weightsURL)
+    try model.update(
+        parameters: ModuleParameters.unflattened(weights.mapValues { $0.asType(dtype) }),
+        verify: .none)
+    mx.eval(model.parameters())
     return model
 }
 
