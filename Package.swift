@@ -173,7 +173,9 @@ let package = Package(
             exclude: [
                 "README.md"
             ],
-            resources: [],
+            resources: [
+                .process("Resources")
+            ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
@@ -186,7 +188,9 @@ let package = Package(
                 "MLXWhisper",
             ],
             path: "Tests/MLXWhisperTests",
-            resources: [],
+            resources: [
+                .process("Resources")
+            ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")
             ]
