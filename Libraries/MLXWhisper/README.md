@@ -78,7 +78,7 @@ xcodebuild -scheme whisper-tool -configuration Release -derivedDataPath .build
 
 # The binary will be located at:
 # .build/Build/Products/Release/whisper-tool
-# eg: `.build/Build/Products/Release/whisper-tool -m tiny Tests/MLXWhisperTests/Resources/jfk.wav`
+.build/Build/Products/Release/whisper-tool -m tiny Tests/MLXWhisperTests/Resources/jfk.wav
 ```
 
 ### CLI Usage
