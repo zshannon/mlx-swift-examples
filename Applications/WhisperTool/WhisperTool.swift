@@ -3,9 +3,9 @@
 import ArgumentParser
 import Foundation
 import MLX
-import MLXWhisper
 import MLXLMCommon
 import MLXNN
+import MLXWhisper
 
 @main
 struct WhisperTool: AsyncParsableCommand {
@@ -13,22 +13,22 @@ struct WhisperTool: AsyncParsableCommand {
         abstract: "Command line tool for transcribing audio files using Whisper",
         version: "1.0.0"
     )
-    
+
     @Option(name: .shortAndLong, help: "Model size (tiny, base, small, medium, large)")
     var model: String = "tiny"
-    
+
     @Argument(help: "Path to the audio file (.wav format)")
     var audioFile: String
-    
+
     @Flag(name: .long, help: "Enable verbose output")
     var verbose: Bool = false
-    
+
     @Option(name: .long, help: "Output format (text, json)")
     var format: String = "text"
-    
+
     @Option(name: .long, help: "Language code (auto-detect if not specified)")
     var language: String?
-    
+
     mutating func run() async throws {
         if verbose {
             print("🎙️ MLX Whisper Transcription Tool")
@@ -40,38 +40,38 @@ struct WhisperTool: AsyncParsableCommand {
             }
             print()
         }
-        
+
         // Validate audio file exists
         guard FileManager.default.fileExists(atPath: audioFile) else {
             throw ValidationError("Audio file not found: \(audioFile)")
         }
-        
+
         // Get model configuration
         let modelConfig = try getModelConfiguration(for: model)
-        
+
         if verbose {
             print("📥 Loading model: \(modelConfig.name)")
         }
-        
+
         // Create factory and load model
         let factory = WhisperModelFactory.shared
         let container = try await factory.loadContainer(configuration: modelConfig)
-        
+
         if verbose {
             print("✅ Model loaded successfully")
             print("🎵 Transcribing audio...")
         }
-        
+
         // Transcribe audio
         let startTime = Date()
         let transcription = try await container.transcribe(file: audioFile)
         let duration = Date().timeIntervalSince(startTime)
-        
+
         // Output results
         switch format.lowercased() {
         case "json":
             let result = TranscriptionResult(
-                text: transcription,
+                text: transcription.text,
                 model: model,
                 audioFile: audioFile,
                 language: language,
@@ -81,8 +81,8 @@ struct WhisperTool: AsyncParsableCommand {
             encoder.outputFormatting = .prettyPrinted
             let jsonData = try encoder.encode(result)
             print(String(data: jsonData, encoding: .utf8)!)
-            
-        default: // text
+
+        default:  // text
             if verbose {
                 print("📝 Transcription completed in \(String(format: "%.2f", duration)) seconds")
                 print("📄 Result:")
@@ -91,7 +91,7 @@ struct WhisperTool: AsyncParsableCommand {
             print(transcription)
         }
     }
-    
+
     private func getModelConfiguration(for modelName: String) throws -> ModelConfiguration {
         switch modelName.lowercased() {
         case "tiny":
@@ -105,7 +105,8 @@ struct WhisperTool: AsyncParsableCommand {
         case "large":
             return ModelConfiguration(id: "mlx-community/whisper-large-v3")
         default:
-            throw ValidationError("Unknown model size: \(modelName). Available: tiny, base, small, medium, large")
+            throw ValidationError(
+                "Unknown model size: \(modelName). Available: tiny, base, small, medium, large")
         }
     }
 }

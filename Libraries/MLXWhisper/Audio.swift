@@ -55,7 +55,9 @@ public func loadAudio(_ file: String, sr: Int = sampleRate) throws -> MLXArray {
 
     let samples = Array(
         UnsafeBufferPointer(start: outputBuffer.floatChannelData![0], count: Int(outputBuffer.frameLength)))
-    return MLXArray(samples)
+    let array = MLXArray(samples)
+    print("[DEBUG] Loaded audio samples shape: \(array.shape)")
+    return array
 }
 #else
 public enum WhisperAudioError: Error { case unsupported }
@@ -74,6 +76,7 @@ public func padOrTrim(_ array: MLXArray, length: Int = nSamples, axis: Int = -1)
         // Simple padding for 1D case
         a = padded(a, widths: [[0, length - a.shape[axis]]])
     }
+    print("[DEBUG] padOrTrim result shape: \(a.shape)")
     return a
 }
 
@@ -213,5 +216,7 @@ public func logMelSpectrogram(_ audio: MLXArray, nMels: Int = 80, padding: Int =
     }
     
     // Transpose to get [nMels, nFrames] shape expected by Whisper
-    return logSpec.T
+    let result = logSpec.T
+    print("[DEBUG] logMelSpectrogram result shape: \(result.shape)")
+    return result
 }
